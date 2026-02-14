@@ -17,7 +17,6 @@ exports.createProduct = async (req, res) => {
       delivery_required
     } = req.body;
 
-    // ===== VALIDATION =====
     if (!name || name.trim() === '') {
       return res.status(400).json({ error: 'Product name is required' });
     }
@@ -68,7 +67,7 @@ exports.createProduct = async (req, res) => {
 
 
 // ===============================
-// GET PRODUCT BY ID (PUBLIC)
+// GET PRODUCT BY ID
 // ===============================
 exports.getProductById = async (req, res) => {
   try {
@@ -105,6 +104,41 @@ exports.getProductById = async (req, res) => {
 
   } catch (error) {
     console.error("Get product error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+
+// ===============================
+// GET ALL PRODUCTS
+// ===============================
+exports.getAllProducts = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `
+      SELECT 
+        id,
+        seller_id,
+        name,
+        description,
+        price,
+        stock,
+        photo_url,
+        delivery_required,
+        created_at
+      FROM products
+      WHERE active = true
+      ORDER BY created_at DESC
+      `
+    );
+
+    res.status(200).json({
+      count: result.rows.length,
+      products: result.rows
+    });
+
+  } catch (error) {
+    console.error("Get all products error:", error);
     res.status(500).json({ error: "Server error" });
   }
 };
