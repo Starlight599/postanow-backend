@@ -13,44 +13,49 @@ exports.createOrder = async (req, res) => {
       buyer_location_note
     } = req.body;
 
-    if (!product_id) {
-      return res.status(400).json({ error: 'Product ID required' });
-    }
-
-    if (!quantity || quantity <= 0) {
-      return res.status(400).json({ error: 'Quantity must be greater than 0' });
+    if (!product_id || !quantity || quantity <= 0) {
+      return res.status(400).json({ error: "Invalid product or quantity" });
     }
 
     await client.query('BEGIN');
 
-    // 1️⃣ Lock product row (prevents race conditions)
+    // 🔒 Lock the product row
     const productResult = await client.query(
-      `SELECT * FROM products WHERE id = $1 AND active = true FOR UPDATE`,
+      `
+      SELECT id, seller_id, price, stock
+      FROM products
+      WHERE id = $1
+      FOR UPDATE
+      `,
       [product_id]
     );
 
     if (productResult.rows.length === 0) {
       await client.query('ROLLBACK');
-      return res.status(404).json({ error: 'Product not found' });
+      return res.status(404).json({ error: "Product not found" });
     }
 
     const product = productResult.rows[0];
 
     if (product.stock < quantity) {
       await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'Not enough stock available' });
+      return res.status(400).json({ error: "Insufficient stock" });
     }
 
-    const unit_price = product.price;
-    const total_amount = unit_price * quantity;
+    const newStock = product.stock - quantity;
+    const totalAmount = product.price * quantity;
 
-    // 2️⃣ Deduct stock
+    // 🔻 Deduct stock
     await client.query(
-      `UPDATE products SET stock = stock - $1 WHERE id = $2`,
-      [quantity, product_id]
+      `
+      UPDATE products
+      SET stock = $1
+      WHERE id = $2
+      `,
+      [newStock, product_id]
     );
 
-    // 3️⃣ Insert order
+    // 🧾 Create order
     const orderResult = await client.query(
       `
       INSERT INTO orders (
@@ -65,15 +70,15 @@ exports.createOrder = async (req, res) => {
         buyer_location_note
       )
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-      RETURNING *;
+      RETURNING *
       `,
       [
         product_id,
         product.seller_id,
         quantity,
-        unit_price,
-        total_amount,
-        buyer_phone || null,
+        product.price,
+        totalAmount,
+        buyer_phone,
         buyer_latitude,
         buyer_longitude,
         buyer_location_note || null
@@ -83,14 +88,14 @@ exports.createOrder = async (req, res) => {
     await client.query('COMMIT');
 
     res.status(201).json({
-      message: 'Order created successfully',
+      message: "Order created successfully",
       order: orderResult.rows[0]
     });
 
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Create order error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error("Create order error:", error);
+    res.status(500).json({ error: "Server error" });
   } finally {
     client.release();
   }
