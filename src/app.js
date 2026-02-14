@@ -5,46 +5,34 @@ const morgan = require("morgan");
 
 const authRoutes = require('./routes/authRoutes');
 const sellerRoutes = require('./routes/sellerRoutes');
-const productRoutes = require('./routes/productRoutes');
-const orderRoutes = require('./routes/orderRoutes'); // ✅ NEW
-
+const productRoutes = require('./routes/productRoutes'); // ✅ NEW
+const paymentRoutes = require('./routes/paymentRoutes'); // ✅ NEW
 const authMiddleware = require('./middleware/authMiddleware');
 
 const app = express();
 
-// ===============================
-// BODY PARSING
-// ===============================
+// Body parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ===============================
-// SECURITY & LOGGING
-// ===============================
+// Security & logging
 app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
 
-// ===============================
-// ROUTES
-// ===============================
+// Routes
 app.use('/auth', authRoutes);
 app.use('/seller', sellerRoutes);
-app.use('/product', productRoutes);
-app.use('/order', orderRoutes); // ✅ NEW
+app.use('/product', productRoutes); // ✅ NEW
+app.use('/payment', paymentRoutes); // ✅ NEW
 
-// ===============================
-// ROOT
-// ===============================
+// Health + root
 app.get("/", (req, res) => {
   res.status(200).json({
     message: "Welcome to PostaNow API",
   });
 });
 
-// ===============================
-// HEALTH CHECK
-// ===============================
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "PostaNow API running",
@@ -52,9 +40,7 @@ app.get("/health", (req, res) => {
   });
 });
 
-// ===============================
-// PROTECTED TEST ROUTE
-// ===============================
+// Protected test route
 app.get('/protected', authMiddleware, (req, res) => {
   res.status(200).json({
     message: 'You are authenticated',
