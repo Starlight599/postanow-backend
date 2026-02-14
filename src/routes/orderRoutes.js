@@ -1,9 +1,12 @@
 const express = require('express');
 const router = express.Router();
 
-const { createOrder } = require('../controllers/orderController');
+const {
+  createOrder,
+  updateOrderStatus
+} = require('../controllers/orderController');
 
-// Public order creation
 router.post('/', createOrder);
+router.patch('/:id/status', updateOrderStatus);
 
 module.exports = router;

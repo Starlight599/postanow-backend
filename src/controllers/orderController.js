@@ -1,5 +1,9 @@
 const pool = require('../config/database');
 
+
+// ========================================
+// CREATE ORDER (WITH ATOMIC STOCK CONTROL)
+// ========================================
 exports.createOrder = async (req, res) => {
   const client = await pool.connect();
 
@@ -19,7 +23,7 @@ exports.createOrder = async (req, res) => {
 
     await client.query('BEGIN');
 
-    // 🔒 Lock the product row
+    // 🔒 Lock product row to prevent race conditions
     const productResult = await client.query(
       `
       SELECT id, seller_id, price, stock
@@ -45,7 +49,7 @@ exports.createOrder = async (req, res) => {
     const newStock = product.stock - quantity;
     const totalAmount = product.price * quantity;
 
-    // 🔻 Deduct stock
+    // ➖ Deduct stock
     await client.query(
       `
       UPDATE products
@@ -55,7 +59,7 @@ exports.createOrder = async (req, res) => {
       [newStock, product_id]
     );
 
-    // 🧾 Create order
+    // 🧾 Insert order
     const orderResult = await client.query(
       `
       INSERT INTO orders (
@@ -67,9 +71,10 @@ exports.createOrder = async (req, res) => {
         buyer_phone,
         buyer_latitude,
         buyer_longitude,
-        buyer_location_note
+        buyer_location_note,
+        status
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'PENDING')
       RETURNING *
       `,
       [
@@ -98,5 +103,65 @@ exports.createOrder = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   } finally {
     client.release();
+  }
+};
+
+
+
+// ========================================
+// UPDATE ORDER STATUS
+// ========================================
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ error: 'Status is required' });
+    }
+
+    // 1️⃣ Get order
+    const orderResult = await pool.query(
+      `SELECT * FROM orders WHERE id = $1`,
+      [id]
+    );
+
+    if (orderResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const order = orderResult.rows[0];
+
+    // 2️⃣ If cancelling and not already cancelled → restore stock
+    if (status === 'CANCELLED' && order.status !== 'CANCELLED') {
+      await pool.query(
+        `
+        UPDATE products
+        SET stock = stock + $1
+        WHERE id = $2
+        `,
+        [order.quantity, order.product_id]
+      );
+    }
+
+    // 3️⃣ Update order status
+    const updatedOrder = await pool.query(
+      `
+      UPDATE orders
+      SET status = $1
+      WHERE id = $2
+      RETURNING *
+      `,
+      [status, id]
+    );
+
+    res.status(200).json({
+      message: 'Order status updated',
+      order: updatedOrder.rows[0]
+    });
+
+  } catch (error) {
+    console.error('Update order status error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 };
