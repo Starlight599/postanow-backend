@@ -4,9 +4,6 @@ exports.completeProfile = async (req, res) => {
   try {
     const sellerId = req.sellerId;
 
-    console.log("Authenticated sellerId:", sellerId);
-    console.log("Request body:", req.body);
-
     const {
       business_name,
       pickup_latitude,
@@ -37,15 +34,13 @@ exports.completeProfile = async (req, res) => {
       ]
     );
 
-    console.log("Rows updated:", result.rowCount);
-
     res.status(200).json({
       message: 'Profile updated successfully',
       seller: result.rows[0]
     });
 
   } catch (error) {
-    console.error("Profile update error:", error);
+    console.error(error);
     res.status(500).json({ error: 'Server error' });
   }
 };
