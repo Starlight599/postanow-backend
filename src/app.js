@@ -5,6 +5,7 @@ const morgan = require("morgan");
 
 const authRoutes = require('./routes/authRoutes');
 const sellerRoutes = require('./routes/sellerRoutes');
+const productRoutes = require('./routes/productRoutes'); // ✅ NEW
 const authMiddleware = require('./middleware/authMiddleware');
 
 const app = express();
@@ -21,6 +22,7 @@ app.use(morgan("dev"));
 // Routes
 app.use('/auth', authRoutes);
 app.use('/seller', sellerRoutes);
+app.use('/product', productRoutes); // ✅ NEW
 
 // Health + root
 app.get("/", (req, res) => {
