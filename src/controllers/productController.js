@@ -13,25 +13,41 @@ exports.createProduct = async (req, res) => {
       delivery_required
     } = req.body;
 
-    if (!name || !price) {
-      return res.status(400).json({ error: 'Name and price are required' });
+    // ===== VALIDATION =====
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ error: 'Product name is required' });
+    }
+
+    if (price === undefined || price <= 0) {
+      return res.status(400).json({ error: 'Price must be greater than 0' });
+    }
+
+    if (stock === undefined || stock < 0) {
+      return res.status(400).json({ error: 'Stock is required and must be 0 or more' });
     }
 
     const result = await pool.query(
       `
-      INSERT INTO products 
-      (seller_id, name, description, price, stock, photo_url, delivery_required)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO products (
+        seller_id,
+        name,
+        description,
+        price,
+        stock,
+        photo_url,
+        delivery_required
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7)
       RETURNING *;
       `,
       [
         sellerId,
-        name,
+        name.trim(),
         description || null,
         price,
-        stock || 0,
+        stock,
         photo_url || null,
-        delivery_required || false
+        delivery_required ?? false
       ]
     );
 
