@@ -2,9 +2,8 @@ const express = require('express');
 const router = express.Router();
 
 const authMiddleware = require('../middleware/authMiddleware');
-const { completeSellerProfile } = require('../controllers/sellerController');
+const { completeProfile } = require('../controllers/sellerController');
 
-// Seller completes profile (must be logged in)
-router.post('/complete-profile', authMiddleware, completeSellerProfile);
+router.post('/complete-profile', authMiddleware, completeProfile);
 
 module.exports = router;
