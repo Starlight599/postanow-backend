@@ -4,84 +4,93 @@
   <meta charset="UTF-8">
   <title>PostaNow Order</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
     body {
-      font-family: Arial;
-      background: #0b0b22;
-      color: white;
-      text-align: center;
-      padding: 40px;
-    }
-
-    .card {
-      background: #111133;
-      padding: 25px;
-      border-radius: 10px;
-      max-width: 400px;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 420px;
       margin: auto;
     }
 
+    h2 { margin-bottom: 5px; }
+
+    .price {
+      font-size: 20px;
+      color: green;
+      margin-bottom: 10px;
+    }
+
+    .stock {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
     input {
-      padding: 12px;
       width: 100%;
-      margin-top: 10px;
+      padding: 12px;
+      font-size: 16px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
       border-radius: 6px;
-      border: none;
     }
 
     button {
-      margin-top: 15px;
-      padding: 12px;
       width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      background: black;
+      color: white;
       border: none;
       border-radius: 6px;
-      background: #5a4fff;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
     }
 
-    button:hover {
-      background: #483df0;
+    .msg {
+      margin-top: 15px;
+      font-size: 14px;
     }
   </style>
 </head>
 
 <body>
-  <div class="card">
-    <h2>Place Order</h2>
-    <p id="product"></p>
 
-    <form id="orderForm">
-      <input id="phone" placeholder="Your phone number" required>
-      <button type="submit">Order Now</button>
-    </form>
+  <h2 id="name">Loading...</h2>
+  <div class="price" id="price"></div>
+  <div class="stock" id="stock"></div>
 
-    <p id="msg"></p>
-  </div>
+  <input id="phone" placeholder="Your phone number" />
+  <button onclick="order()">Order Now</button>
 
-<script>
-const id = window.location.pathname.split("/").pop();
+  <div class="msg" id="msg"></div>
 
-// show product id
-document.getElementById("product").innerText =
-  "Product ID: " + id;
+  <script>
+    const productId = window.location.pathname.split("/").pop();
 
-document.getElementById("orderForm").onsubmit = async (e) => {
-  e.preventDefault();
+    async function loadProduct() {
+      const res = await fetch("/product/" + productId);
+      const data = await res.json();
 
-  const phone = document.getElementById("phone").value;
+      document.getElementById("name").innerText = data.product.name;
+      document.getElementById("price").innerText = "GMD " + data.product.price;
+      document.getElementById("stock").innerText = "Stock: " + data.product.stock;
+    }
 
-  const res = await fetch("/quick-order/" + id, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ buyer_phone: phone })
-  });
+    async function order() {
+      const phone = document.getElementById("phone").value;
 
-  const text = await res.text();
-  document.getElementById("msg").innerHTML = text;
-};
-</script>
+      const res = await fetch("/quick-order/" + productId, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ buyer_phone: phone })
+      });
+
+      const text = await res.text();
+      document.getElementById("msg").innerHTML = text;
+    }
+
+    loadProduct();
+  </script>
 
 </body>
 </html>
