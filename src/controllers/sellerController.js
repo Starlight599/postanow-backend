@@ -75,7 +75,35 @@ exports.getSellerOrders = async (req, res) => {
       [sellerId]
     );
 
-    res.json({ orders: result.rows });
+    const orders = result.rows.map(o => {
+      let distance = null;
+    
+      if (
+        o.pickup_latitude !== null &&
+        o.pickup_longitude !== null &&
+        o.buyer_latitude !== null &&
+        o.buyer_longitude !== null
+      ) {
+        const R = 6371;
+        const dLat = (o.buyer_latitude - o.pickup_latitude) * Math.PI / 180;
+        const dLng = (o.buyer_longitude - o.pickup_longitude) * Math.PI / 180;
+    
+        const a =
+          Math.sin(dLat / 2) ** 2 +
+          Math.cos(o.pickup_latitude * Math.PI / 180) *
+          Math.cos(o.buyer_latitude * Math.PI / 180) *
+          Math.sin(dLng / 2) ** 2;
+    
+        distance = (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(2);
+      }
+    
+      return {
+        ...o,
+        distance_km: distance
+      };
+    });
+    
+    res.json({ orders });
 
   } catch (err) {
     console.error("Seller orders error:", err);
