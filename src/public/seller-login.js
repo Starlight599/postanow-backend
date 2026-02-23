@@ -1,56 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Seller Login</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      max-width: 420px;
-      margin: auto;
-    }
-    h2 { margin-bottom: 20px; }
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 12px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    button {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      background: black;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      margin-bottom: 10px;
-    }
-    .msg { margin-top: 10px; }
-  </style>
-</head>
-
-<body>
-
-<h2>Seller Login</h2>
-
-<input id="phone" placeholder="Phone number">
-
-<button id="sendCodeBtn">Send Code</button>
-
-<div id="otpSection" style="display:none;">
-  <input id="otp" placeholder="Enter code">
-  <button id="verifyBtn">Verify & Login</button>
-</div>
-
-<div class="msg" id="msg"></div>
-
-<script>
 let currentPhone = null;
 
 async function requestOTP() {
@@ -63,7 +10,6 @@ async function requestOTP() {
 
   currentPhone = phone;
 
-  // 👉 show OTP input immediately
   document.getElementById("otpSection").style.display = "block";
   document.getElementById("msg").innerText = "Code sent (check server logs)";
 
@@ -112,12 +58,12 @@ async function verifyOTP() {
   }
 }
 
-document.getElementById("sendCodeBtn").addEventListener("click", requestOTP);
-document.getElementById("verifyBtn").addEventListener("click", verifyOTP);
-</script>
+document.addEventListener("DOMContentLoaded", () => {
+  document
+    .getElementById("sendCodeBtn")
+    .addEventListener("click", requestOTP);
 
-<div class="msg" id="msg"></div>
-
-<script src="/seller-login.js"></script>
-</body>
-</html>
+  document
+    .getElementById("verifyBtn")
+    .addEventListener("click", verifyOTP);
+});
