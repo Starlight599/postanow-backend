@@ -110,9 +110,6 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-console.log("PARAM ID RAW:", req.params.id, "LEN:", req.params.id.length);
-
-
 // ========================================
 // UPDATE ORDER STATUS
 // ========================================
