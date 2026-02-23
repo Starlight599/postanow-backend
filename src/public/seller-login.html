@@ -41,11 +41,11 @@
 
 <input id="phone" placeholder="Phone number">
 
-<button onclick="requestOTP()">Send Code</button>
+<button id="sendCodeBtn">Send Code</button>
 
 <div id="otpSection" style="display:none;">
   <input id="otp" placeholder="Enter code">
-  <button onclick="verifyOTP()">Verify & Login</button>
+  <button id="verifyBtn">Verify & Login</button>
 </div>
 
 <div class="msg" id="msg"></div>
@@ -62,6 +62,7 @@ async function requestOTP() {
   }
 
   document.getElementById("msg").innerText = "Sending code...";
+  currentPhone = phone;
 
   try {
     const res = await fetch("/auth/request-otp", {
@@ -75,9 +76,8 @@ async function requestOTP() {
       return;
     }
 
-    currentPhone = phone;
     document.getElementById("otpSection").style.display = "block";
-    document.getElementById("msg").innerText = "Code sent to your phone";
+    document.getElementById("msg").innerText = "Code sent (check server logs)";
 
   } catch {
     document.getElementById("msg").innerText = "Network error";
@@ -112,16 +112,17 @@ async function verifyOTP() {
       return;
     }
 
-    // ✅ Save seller token
     localStorage.setItem("token", data.token);
-
-    // ✅ Go to seller dashboard
     window.location.href = "/seller-orders.html";
 
   } catch {
     document.getElementById("msg").innerText = "Network error";
   }
 }
+
+// ✅ Attach listeners (CSP-safe)
+document.getElementById("sendCodeBtn").addEventListener("click", requestOTP);
+document.getElementById("verifyBtn").addEventListener("click", verifyOTP);
 </script>
 
 </body>
