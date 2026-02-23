@@ -61,6 +61,9 @@ exports.getSellerOrders = async (req, res) => {
         o.total_amount,
         o.status,
         o.created_at,
+        o.buyer_phone,
+        o.buyer_latitude,
+        o.buyer_longitude,
         p.name AS product_name
       FROM orders o
       JOIN products p ON p.id = o.product_id
