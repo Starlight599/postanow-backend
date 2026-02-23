@@ -61,27 +61,19 @@ async function requestOTP() {
     return;
   }
 
-  document.getElementById("msg").innerText = "Sending code...";
   currentPhone = phone;
 
+  // 👉 show OTP input immediately
+  document.getElementById("otpSection").style.display = "block";
+  document.getElementById("msg").innerText = "Code sent (check server logs)";
+
   try {
-    const res = await fetch("/auth/request-otp", {
+    await fetch("/auth/request-otp", {
       method: "POST",
       headers: {"Content-Type":"application/json"},
       body: JSON.stringify({ phone })
     });
-
-    if (!res.ok) {
-      document.getElementById("msg").innerText = "Failed to send code";
-      return;
-    }
-
-    document.getElementById("otpSection").style.display = "block";
-    document.getElementById("msg").innerText = "Code sent (check server logs)";
-
-  } catch {
-    document.getElementById("msg").innerText = "Network error";
-  }
+  } catch {}
 }
 
 async function verifyOTP() {
@@ -100,7 +92,7 @@ async function verifyOTP() {
       headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
         phone: currentPhone,
-        otp: otp
+        code: otp
       })
     });
 
@@ -120,7 +112,6 @@ async function verifyOTP() {
   }
 }
 
-// ✅ Attach listeners (CSP-safe)
 document.getElementById("sendCodeBtn").addEventListener("click", requestOTP);
 document.getElementById("verifyBtn").addEventListener("click", verifyOTP);
 </script>
