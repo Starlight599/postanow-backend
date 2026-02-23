@@ -46,6 +46,7 @@ app.get("/health", (req, res) => {
 
 // ✅ PUBLIC BUY PAGE (static)
 app.get("/buy/:id", (req, res) => {
+  res.set("Cache-Control", "no-store");
   res.sendFile(path.join(__dirname, "public", "buy.html"));
 });
 
