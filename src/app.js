@@ -2,12 +2,13 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const path = require("path");
 
 const authRoutes = require('./routes/authRoutes');
 const sellerRoutes = require('./routes/sellerRoutes');
-const productRoutes = require('./routes/productRoutes'); // ✅ NEW
-const paymentRoutes = require('./routes/paymentRoutes'); // ✅ NEW
-const orderRoutes = require('./routes/orderRoutes'); // ✅ NEW
+const productRoutes = require('./routes/productRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 const authMiddleware = require('./middleware/authMiddleware');
 
 const app = express();
@@ -21,19 +22,19 @@ app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
 
+// ✅ Static public folder
+app.use(express.static(path.join(__dirname, "public")));
+
 // Routes
 app.use('/auth', authRoutes);
 app.use('/seller', sellerRoutes);
-app.use('/product', productRoutes); // ✅ NEW
-app.use('/payment', paymentRoutes); // ✅ NEW
-app.use('/order', orderRoutes); // ✅ NEW
-
+app.use('/product', productRoutes);
+app.use('/payment', paymentRoutes);
+app.use('/order', orderRoutes);
 
 // Health + root
 app.get("/", (req, res) => {
-  res.status(200).json({
-    message: "Welcome to PostaNow API",
-  });
+  res.status(200).json({ message: "Welcome to PostaNow API" });
 });
 
 app.get("/health", (req, res) => {
@@ -43,46 +44,12 @@ app.get("/health", (req, res) => {
   });
 });
 
-// ===============================
-// PUBLIC BUY PAGE
-// ===============================
-app.get("/buy/:id", async (req, res) => {
-  const pool = require("./config/database");
-
-  try {
-    const { id } = req.params;
-
-    const result = await pool.query(
-      "SELECT id, name, price, stock FROM products WHERE id = $1",
-      [id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).send("Product not found");
-    }
-
-    const p = result.rows[0];
-
-    res.send(`
-      <h2>${p.name}</h2>
-      <p>Price: ${p.price}</p>
-      <p>Stock: ${p.stock}</p>
-
-      <form method="POST" action="/quick-order/${p.id}">
-        <input name="buyer_phone" placeholder="Your phone" required />
-        <button type="submit">Order Now</button>
-      </form>
-    `);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Server error");
-  }
+// ✅ PUBLIC BUY PAGE (static)
+app.get("/buy/:id", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "buy.html"));
 });
 
-// ===============================
-// QUICK ORDER
-// ===============================
+// QUICK ORDER stays as-is
 app.post("/quick-order/:id", async (req, res) => {
   const pool = require("./config/database");
 
@@ -102,8 +69,7 @@ app.post("/quick-order/:id", async (req, res) => {
     const product = productResult.rows[0];
 
     const orderResult = await pool.query(
-      `
-      INSERT INTO orders (
+      `INSERT INTO orders (
         product_id,
         seller_id,
         quantity,
@@ -113,15 +79,11 @@ app.post("/quick-order/:id", async (req, res) => {
         status
       )
       VALUES ($1,$2,1,$3,$3,$4,'PENDING')
-      RETURNING id
-      `,
+      RETURNING id`,
       [id, product.seller_id, product.price, buyer_phone]
     );
 
-    res.send(`
-      ✅ Order placed successfully<br>
-      Order ID: ${orderResult.rows[0].id}
-    `);
+    res.send(`✅ Order placed successfully<br>Order ID: ${orderResult.rows[0].id}`);
 
   } catch (err) {
     console.error(err);
@@ -129,7 +91,6 @@ app.post("/quick-order/:id", async (req, res) => {
   }
 });
 
-// Protected test route
 app.get('/protected', authMiddleware, (req, res) => {
   res.status(200).json({
     message: 'You are authenticated',

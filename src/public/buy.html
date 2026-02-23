@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>PostaNow Order</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial;
+      background: #0b0b22;
+      color: white;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .card {
+      background: #111133;
+      padding: 25px;
+      border-radius: 10px;
+      max-width: 400px;
+      margin: auto;
+    }
+
+    input {
+      padding: 12px;
+      width: 100%;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: none;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 12px;
+      width: 100%;
+      border: none;
+      border-radius: 6px;
+      background: #5a4fff;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #483df0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h2>Place Order</h2>
+    <p id="product"></p>
+
+    <form id="orderForm">
+      <input id="phone" placeholder="Your phone number" required>
+      <button type="submit">Order Now</button>
+    </form>
+
+    <p id="msg"></p>
+  </div>
+
+<script>
+const id = window.location.pathname.split("/").pop();
+
+// show product id
+document.getElementById("product").innerText =
+  "Product ID: " + id;
+
+document.getElementById("orderForm").onsubmit = async (e) => {
+  e.preventDefault();
+
+  const phone = document.getElementById("phone").value;
+
+  const res = await fetch("/quick-order/" + id, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ buyer_phone: phone })
+  });
+
+  const text = await res.text();
+  document.getElementById("msg").innerHTML = text;
+};
+</script>
+
+</body>
+</html>
