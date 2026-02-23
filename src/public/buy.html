@@ -12,21 +12,9 @@
       max-width: 420px;
       margin: auto;
     }
-
     h2 { margin-bottom: 5px; }
-
-    .price {
-      font-size: 20px;
-      color: green;
-      margin-bottom: 10px;
-    }
-
-    .stock {
-      font-size: 14px;
-      color: #555;
-      margin-bottom: 20px;
-    }
-
+    .price { font-size: 20px; color: green; margin-bottom: 10px; }
+    .stock { font-size: 14px; color: #555; margin-bottom: 20px; }
     input {
       width: 100%;
       padding: 12px;
@@ -35,7 +23,6 @@
       border: 1px solid #ccc;
       border-radius: 6px;
     }
-
     button {
       width: 100%;
       padding: 14px;
@@ -45,11 +32,7 @@
       border: none;
       border-radius: 6px;
     }
-
-    .msg {
-      margin-top: 15px;
-      font-size: 14px;
-    }
+    .msg { margin-top: 15px; font-size: 14px; }
   </style>
 </head>
 
@@ -66,29 +49,29 @@
 
   <script>
     const productId = window.location.pathname.split("/").pop();
-  
+
     async function loadProduct() {
-      const res = await fetch("https://app.postanow.com/product/" + productId);
+      const res = await fetch("/product/" + productId);
       const data = await res.json();
-  
+
       document.getElementById("name").innerText = data.name;
       document.getElementById("price").innerText = "GMD " + data.price;
       document.getElementById("stock").innerText = "Stock: " + data.stock;
     }
-  
+
     async function order() {
       const phone = document.getElementById("phone").value;
-  
+
       const res = await fetch("/quick-order/" + productId, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ buyer_phone: phone })
       });
-  
+
       const text = await res.text();
       document.getElementById("msg").innerHTML = text;
     }
-  
+
     loadProduct();
   </script>
 
