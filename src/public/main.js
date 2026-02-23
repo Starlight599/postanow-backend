@@ -1,13 +1,15 @@
 const productId = window.location.pathname.split("/").pop();
 
 async function loadProduct() {
-  const res = await fetch("/product/" + productId);
-  const data = await res.json();
-
-  document.getElementById("name").innerText = data.name;
-  document.getElementById("price").innerText = "GMD " + data.price;
-  document.getElementById("stock").innerText = "Stock: " + data.stock;
-}
+    const res = await fetch("/product/" + productId);
+    const json = await res.json();
+  
+    const data = json.product; // ← match backend shape
+  
+    document.getElementById("name").innerText = data.name;
+    document.getElementById("price").innerText = "GMD " + data.price;
+    document.getElementById("stock").innerText = "Stock: " + data.stock;
+  }
 
 async function order() {
   const phone = document.getElementById("phone").value;
