@@ -44,3 +44,36 @@ exports.completeProfile = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+// ===============================
+// GET SELLER ORDERS
+// ===============================
+exports.getSellerOrders = async (req, res) => {
+  try {
+    const sellerId = req.sellerId;
+
+    const result = await pool.query(
+      `
+      SELECT 
+        o.id,
+        o.product_id,
+        o.quantity,
+        o.total_amount,
+        o.status,
+        o.created_at,
+        p.name AS product_name
+      FROM orders o
+      JOIN products p ON p.id = o.product_id
+      WHERE o.seller_id = $1
+      ORDER BY o.created_at DESC
+      `,
+      [sellerId]
+    );
+
+    res.json({ orders: result.rows });
+
+  } catch (err) {
+    console.error("Seller orders error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
