@@ -35,8 +35,12 @@ async function loadOrders() {
             ? `<div>📍 <a href="https://maps.google.com/?q=${o.buyer_latitude},${o.buyer_longitude}" target="_blank">View location</a></div>`
             : "";
     
-        const distance =
-          o.distance_km ? `<div>Distance: ${o.distance_km} km</div>` : "";
+            const distance =
+            o.distance_km !== null
+              ? `<div>Distance: ${o.distance_km < 1
+                  ? Math.round(o.distance_km * 1000) + " m"
+                  : o.distance_km + " km"}</div>`
+              : "";
     
         return `
           <div class="order">
