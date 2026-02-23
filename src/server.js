@@ -1,5 +1,6 @@
-require("dotenv").config();
-require("./config/database");   // 👈 ADD THIS LINE
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
 
 const app = require("./app");
 
