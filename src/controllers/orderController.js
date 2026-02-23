@@ -7,6 +7,8 @@ const pool = require('../config/database');
 exports.createOrder = async (req, res) => {
   const client = await pool.connect();
 
+  console.log("Received order creation request"); // Log to see if the request reaches this function
+
   try {
     const {
       product_id,
@@ -16,6 +18,8 @@ exports.createOrder = async (req, res) => {
       buyer_longitude,
       buyer_location_note
     } = req.body;
+
+    console.log("Request body:", req.body); // Log the received body
 
     if (!product_id || !quantity || quantity <= 0) {
       return res.status(400).json({ error: "Invalid product or quantity" });
@@ -106,62 +110,54 @@ exports.createOrder = async (req, res) => {
   }
 };
 
+console.log("PARAM ID RAW:", req.params.id, "LEN:", req.params.id.length);
 
 
 // ========================================
 // UPDATE ORDER STATUS
 // ========================================
 exports.updateOrderStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    if (!status) {
-      return res.status(400).json({ error: 'Status is required' });
-    }
-
-    // 1️⃣ Get order
-    const orderResult = await pool.query(
-      `SELECT * FROM orders WHERE id = $1`,
-      [id]
-    );
-
-    if (orderResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-
-    const order = orderResult.rows[0];
-
-    // 2️⃣ If cancelling and not already cancelled → restore stock
-    if (status === 'CANCELLED' && order.status !== 'CANCELLED') {
-      await pool.query(
-        `
-        UPDATE products
-        SET stock = stock + $1
-        WHERE id = $2
-        `,
-        [order.quantity, order.product_id]
+    try {
+      const id = req.params.id.trim();
+      const { status } = req.body;
+  
+      console.log("Update request →", id, "len:", id.length);
+  
+      if (!status) {
+        return res.status(400).json({ error: 'Status is required' });
+      }
+  
+      const orderResult = await pool.query(
+        `SELECT * FROM orders WHERE id = $1`,
+        [id]
       );
+  
+      if (orderResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+  
+      const order = orderResult.rows[0];
+  
+      if (status === 'CANCELLED' && order.status !== 'CANCELLED') {
+        await pool.query(
+          `UPDATE products SET stock = stock + $1 WHERE id = $2`,
+          [order.quantity, order.product_id]
+        );
+      }
+  
+      const updatedOrder = await pool.query(
+        `UPDATE orders SET status = $1 WHERE id = $2 RETURNING *`,
+        [status, id]
+      );
+  
+      res.status(200).json({
+        message: 'Order status updated',
+        order: updatedOrder.rows[0]
+      });
+  
+    } catch (error) {
+      console.error('Update order status error:', error);
+      res.status(500).json({ error: 'Server error' });
     }
-
-    // 3️⃣ Update order status
-    const updatedOrder = await pool.query(
-      `
-      UPDATE orders
-      SET status = $1
-      WHERE id = $2
-      RETURNING *
-      `,
-      [status, id]
-    );
-
-    res.status(200).json({
-      message: 'Order status updated',
-      order: updatedOrder.rows[0]
-    });
-
-  } catch (error) {
-    console.error('Update order status error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
+  };
+  
