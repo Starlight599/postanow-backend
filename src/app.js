@@ -50,13 +50,13 @@ app.get("/buy/:id", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "buy.html"));
 });
 
-// QUICK ORDER stays as-is
+// ✅ QUICK ORDER (now stores buyer location)
 app.post("/quick-order/:id", async (req, res) => {
   const pool = require("./config/database");
 
   try {
     const { id } = req.params;
-    const { buyer_phone } = req.body;
+    const { buyer_phone, buyer_latitude, buyer_longitude } = req.body;
 
     const productResult = await pool.query(
       "SELECT id, seller_id, price FROM products WHERE id = $1",
@@ -77,14 +77,23 @@ app.post("/quick-order/:id", async (req, res) => {
         unit_price,
         total_amount,
         buyer_phone,
+        buyer_latitude,
+        buyer_longitude,
         status
       )
-      VALUES ($1,$2,1,$3,$3,$4,'PENDING')
+      VALUES ($1,$2,1,$3,$3,$4,$5,$6,'PENDING')
       RETURNING id`,
-      [id, product.seller_id, product.price, buyer_phone]
+      [
+        id,
+        product.seller_id,
+        product.price,
+        buyer_phone,
+        buyer_latitude,
+        buyer_longitude
+      ]
     );
 
-    res.send(`✅ Order placed successfully<br>Order ID: ${orderResult.rows[0].id}`);
+    res.send(`✅ Order received<br>We will contact you on WhatsApp shortly`);
 
   } catch (err) {
     console.error(err);
