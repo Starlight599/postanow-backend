@@ -56,7 +56,8 @@ app.post("/quick-order/:id", async (req, res) => {
 
   try {
     const { id } = req.params;
-    const { buyer_phone, buyer_latitude, buyer_longitude } = req.body;
+    const { buyer_phone, buyer_latitude, buyer_longitude, quantity } = req.body;
+const qty = quantity && quantity > 0 ? quantity : 1;
 
     const productResult = await pool.query(
       "SELECT id, seller_id, price FROM products WHERE id = $1",
@@ -81,12 +82,14 @@ app.post("/quick-order/:id", async (req, res) => {
         buyer_longitude,
         status
       )
-      VALUES ($1,$2,1,$3,$3,$4,$5,$6,'PENDING')
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'PENDING')
       RETURNING id`,
       [
         id,
         product.seller_id,
+        qty,
         product.price,
+        product.price * qty,
         buyer_phone,
         buyer_latitude,
         buyer_longitude

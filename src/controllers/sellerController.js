@@ -61,12 +61,14 @@ exports.getSellerOrders = async (req, res) => {
         o.total_amount,
         o.status,
         o.created_at,
-        o.buyer_phone,
         o.buyer_latitude,
         o.buyer_longitude,
-        p.name AS product_name
+        p.name AS product_name,
+        s.pickup_latitude,
+        s.pickup_longitude
       FROM orders o
       JOIN products p ON p.id = o.product_id
+      JOIN sellers s ON s.id = o.seller_id
       WHERE o.seller_id = $1
       ORDER BY o.created_at DESC
       `,

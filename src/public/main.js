@@ -12,9 +12,16 @@ async function loadProduct() {
 
 async function order() {
   const phone = document.getElementById("phone").value.trim();
+  const qtyInput = document.getElementById("qty");
+  const qty = qtyInput ? parseInt(qtyInput.value || "1") : 1;
 
   if (!phone) {
     document.getElementById("msg").innerText = "Please enter your phone number";
+    return;
+  }
+
+  if (qty <= 0) {
+    document.getElementById("msg").innerText = "Invalid quantity";
     return;
   }
 
@@ -40,7 +47,8 @@ async function order() {
           body: JSON.stringify({
             buyer_phone: phone,
             buyer_latitude: lat,
-            buyer_longitude: lng
+            buyer_longitude: lng,
+            quantity: qty
           })
         });
 

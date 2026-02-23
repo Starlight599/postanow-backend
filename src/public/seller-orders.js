@@ -38,8 +38,13 @@ async function loadOrders() {
           return `
             <div class="order">
               <div class="name">${o.product_name}</div>
-              <div>Amount: GMD ${o.total_amount}</div>
-              <div>Status: <span class="status">${o.status}</span></div>
+              <div>Qty: ${o.quantity}</div>
+<div>Amount: GMD ${o.total_amount}</div>
+<div>Status: <span class="status">${o.status}</span></div>
+${o.distance_km ? `<div>Distance: ${o.distance_km} km</div>` : ""}
+${o.buyer_latitude ? 
+  `<div><a target="_blank" href="https://maps.google.com/?q=${o.buyer_latitude},${o.buyer_longitude}">📍 View location</a></div>` 
+  : ""}
               ${mapLink}
             </div>
           `;
