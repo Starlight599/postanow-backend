@@ -39,5 +39,6 @@ async function order() {
   }
 }
 
-window.order = order;
+document.getElementById("orderBtn").addEventListener("click", order);
+
 loadProduct();
