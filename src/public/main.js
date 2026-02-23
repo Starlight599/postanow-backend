@@ -18,27 +18,47 @@ async function order() {
     return;
   }
 
-  document.getElementById("msg").innerText = "Placing order…";
+  document.getElementById("msg").innerText = "Getting your location…";
 
-  try {
-    const res = await fetch("/quick-order/" + productId, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ buyer_phone: phone })
-    });
-
-    if (!res.ok) {
-      throw new Error("Order failed");
-    }
-
-    document.getElementById("msg").innerHTML =
-      "✅ Order received<br>We will contact you on WhatsApp shortly";
-  } catch (err) {
+  if (!navigator.geolocation) {
     document.getElementById("msg").innerText =
-      "Network error. Please try again.";
+      "Location not supported on this device";
+    return;
   }
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      document.getElementById("msg").innerText = "Placing order…";
+
+      try {
+        const res = await fetch("/quick-order/" + productId, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            buyer_phone: phone,
+            buyer_latitude: lat,
+            buyer_longitude: lng
+          })
+        });
+
+        if (!res.ok) throw new Error();
+
+        document.getElementById("msg").innerHTML =
+          "📍 Location received<br>✅ Order placed<br>We will confirm on WhatsApp";
+      } catch {
+        document.getElementById("msg").innerText =
+          "Network error. Please try again.";
+      }
+    },
+    () => {
+      document.getElementById("msg").innerText =
+        "Please allow location to place order";
+    }
+  );
 }
 
 document.getElementById("orderBtn").addEventListener("click", order);
-
 loadProduct();
