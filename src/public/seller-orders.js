@@ -29,15 +29,21 @@ async function loadOrders() {
       }
   
       container.innerHTML = data.orders
-        .map(
-          (o) => `
-          <div class="order">
-            <div class="name">${o.product_name}</div>
-            <div>Amount: GMD ${o.total_amount}</div>
-            <div>Status: <span class="status">${o.status}</span></div>
-          </div>
-        `
-        )
+        .map((o) => {
+          const mapLink =
+            o.buyer_latitude && o.buyer_longitude
+              ? `<div>📍 <a href="https://maps.google.com/?q=${o.buyer_latitude},${o.buyer_longitude}" target="_blank">View location</a></div>`
+              : "";
+  
+          return `
+            <div class="order">
+              <div class="name">${o.product_name}</div>
+              <div>Amount: GMD ${o.total_amount}</div>
+              <div>Status: <span class="status">${o.status}</span></div>
+              ${mapLink}
+            </div>
+          `;
+        })
         .join("");
     } catch (err) {
       container.innerText = "Network error. Please refresh.";
